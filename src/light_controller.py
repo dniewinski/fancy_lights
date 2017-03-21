@@ -1,34 +1,54 @@
 #!/usr/bin/env python
 
 from ridgeback_msgs.msg import *
+from warthog_msgs.msg import *
 import rospy
 from colour import Color
 import lightPatterns
 
 def RAINBOWS():
     rate = 30
-    pub = rospy.Publisher('cmd_lights', ridgeback_msgs.msg.Lights, queue_size=10)
-    node = rospy.init_node('rainbows')
+
+    node = rospy.init_node('fancy_light_controller')
     r_os = rospy.Rate(rate)
 
-    patterns = lightPatterns.getPatterns(rate)
+    robot = "warthog"
 
-    confused = lightPatterns.lerpLightPattern(lightPatterns.LightStatus(Color("purple")), lightPatterns.LightStatus(Color("green")), 1.0, rate) # Picked the ugliest combo i could think of #
+    msg = None
+    lightMapping = None
+    if robot.upper() == "RIDGEBACK":
+        print "Ridgeback configuration used"
+        msg = ridgeback_msgs.msg.Lights
+        lightMapping = [0, 1, 2, 3, 4, 5, 6, 7]
+        pub = rospy.Publisher('cmd_lights', ridgeback_msgs.msg.Lights, queue_size=10)
+    if robot.upper() == "WARTHOG":
+        print "Warthog configuration used"
+        msg = warthog_msgs.msg.Lights
+        lightMapping = [1, 0, 3, 2, 5, 4, 7, 6]
+        pub = rospy.Publisher('cmd_lights', warthog_msgs.msg.Lights, queue_size=10)
 
-    STATE = "TURNING_LEFT"
-    LASTSTATE = None
+    if lightMapping and msg:
+        patterns = lightPatterns.getPatterns(rate, lightMapping)
 
-    while not rospy.is_shutdown():
-        currentPattern = patterns.get(STATE, confused)
-        LASTSTATE = STATE
-        for i in currentPattern:
-            updateLights(i, pub)
-            r_os.sleep()
-            if STATE != LASTSTATE or rospy.is_shutdown():
-                break
+        confused = lightPatterns.lerpLightPattern(lightPatterns.LightStatus(Color("purple")), lightPatterns.LightStatus(Color("green")), 1.0, rate) # Picked the ugliest combo i could think of #
 
-def updateLights(lStatus, pub):
-    data = ridgeback_msgs.msg.Lights()
+        STATE = "TURNING_LEFT"
+        LASTSTATE = None
+
+        while not rospy.is_shutdown():
+            currentPattern = patterns.get(STATE, confused)
+            LASTSTATE = STATE
+            for i in currentPattern:
+                updateLights(i, pub, msg)
+                r_os.sleep()
+                if STATE != LASTSTATE or rospy.is_shutdown():
+                    break
+
+    else:
+        print "Light Mapping or Robot not setup properly"
+
+def updateLights(lStatus, pub, msg):
+    data = msg()
 
     for i in range(len(lStatus.lights)):
         data.lights[i].red = min(max(lStatus.lights[i].red, 0.0), 1.0)

@@ -1,16 +1,18 @@
 from colour import Color
 
-FLT = 0
-FLB = 1
-FRT = 2
-FRB = 3
-BLT = 4
-BLB = 5
-BRT = 6
-BRB = 7
 
-def getPatterns(rate):
+
+def getPatterns(rate, lightMapping):
     patterns = {}
+
+    FLT = lightMapping[0]
+    FLB = lightMapping[1]
+    FRT = lightMapping[2]
+    FRB = lightMapping[3]
+    BLT = lightMapping[4]
+    BLB = lightMapping[5]
+    BRT = lightMapping[6]
+    BRB = lightMapping[7]
 
     print "INITIALIZING PATTERNS"
 
