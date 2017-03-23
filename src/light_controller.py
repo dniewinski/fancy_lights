@@ -3,16 +3,20 @@
 from ridgeback_msgs.msg import *
 from warthog_msgs.msg import *
 import rospy
+from std_msgs.msg import *
 from colour import Color
 import lightPatterns
 
+STATE = "IDLE"
+
 def RAINBOWS():
+    global STATE
     rate = 30
 
     node = rospy.init_node('fancy_light_controller')
     r_os = rospy.Rate(rate)
 
-    robot = "warthog"
+    robot = "ridgeback"
 
     msg = None
     lightMapping = None
@@ -30,14 +34,16 @@ def RAINBOWS():
     if lightMapping and msg:
         patterns = lightPatterns.getPatterns(rate, lightMapping)
 
+        rospy.Subscriber("movement_state", String, callback)
+
         confused = lightPatterns.lerpLightPattern(lightPatterns.LightStatus(Color("purple")), lightPatterns.LightStatus(Color("green")), 1.0, rate) # Picked the ugliest combo i could think of #
 
-        STATE = "TURNING_LEFT"
         LASTSTATE = None
 
         while not rospy.is_shutdown():
             currentPattern = patterns.get(STATE, confused)
             LASTSTATE = STATE
+            print LASTSTATE
             for i in currentPattern:
                 updateLights(i, pub, msg)
                 r_os.sleep()
@@ -46,6 +52,10 @@ def RAINBOWS():
 
     else:
         print "Light Mapping or Robot not setup properly"
+
+def callback(msg):
+    global STATE
+    STATE = msg.data
 
 def updateLights(lStatus, pub, msg):
     data = msg()

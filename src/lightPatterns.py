@@ -1,8 +1,9 @@
 from colour import Color
 
-
+blinker_rate = 1.0
 
 def getPatterns(rate, lightMapping):
+    global blinker_rate
     patterns = {}
 
     FLT = lightMapping[0]
@@ -24,12 +25,14 @@ def getPatterns(rate, lightMapping):
     BOTTOM = [FRB, FLB, BLB, BRB]
     ALL = [0,1,2,3,4,5,6,7]
 
+    ################### DRIVING #####################
     DRIVING_STATUS = LightStatus(Color("white"))
     DRIVING_STATUS = augmentLightStatus(Color("red"), DRIVING_STATUS, BACK)
 
     driving = []
     driving.extend(lerpLightPattern(DRIVING_STATUS, DRIVING_STATUS, 1.0, rate))
 
+    ################### TURNING #####################
     turning_left = []
     left_on = LightStatus()
     left_on.copyLights(DRIVING_STATUS)
@@ -37,7 +40,7 @@ def getPatterns(rate, lightMapping):
     left_off = LightStatus()
     left_off.copyLights(DRIVING_STATUS)
     left_off = augmentLightStatus(Color("black"), left_off, LEFT, BOTTOM)
-    turning_left.extend(lerpLightPattern(left_on, left_off, 1.5, rate))
+    turning_left.extend(lerpLightPattern(left_on, left_off, blinker_rate, rate))
 
     turning_right = []
     right_on = LightStatus()
@@ -46,8 +49,9 @@ def getPatterns(rate, lightMapping):
     right_off = LightStatus()
     right_off.copyLights(DRIVING_STATUS)
     right_off = augmentLightStatus(Color("Black"), right_off, RIGHT, BOTTOM)
-    turning_right.extend(lerpLightPattern(right_on, right_off, 1.5, rate))
+    turning_right.extend(lerpLightPattern(right_on, right_off, blinker_rate, rate))
 
+    ################### IDLE #####################
     rainbow = []
     rainbow.extend(lerpLightPattern(LightStatus(Color("red")), LightStatus(Color(rgb=(1, 1, 0))), 2.0, rate))
     rainbow.extend(lerpLightPattern(LightStatus(Color(rgb=(1, 1, 0))), LightStatus(Color("green")), 2.0, rate))
@@ -56,10 +60,72 @@ def getPatterns(rate, lightMapping):
     rainbow.extend(lerpLightPattern(LightStatus(Color("blue")), LightStatus(Color(rgb=(1, 0, 1))), 2.0, rate))
     rainbow.extend(lerpLightPattern(LightStatus(Color(rgb=(1, 0, 1))), LightStatus(Color("red")), 2.0, rate))
 
-    patterns["DRIVING"] = driving
-    patterns["IDLE"] = driving
+    ################### STRAFE ####################
+    STRAFE_LEFT_STATUS = LightStatus(Color("white"))
+    STRAFE_LEFT_STATUS = augmentLightStatus(Color("red"), STRAFE_LEFT_STATUS, RIGHT)
+    strafe_left = []
+    strafe_left.extend(lerpLightPattern(STRAFE_LEFT_STATUS, STRAFE_LEFT_STATUS, 1.0, rate))
+
+    STRAFE_RIGHT_STATUS = LightStatus(Color("white"))
+    STRAFE_RIGHT_STATUS = augmentLightStatus(Color("red"), STRAFE_RIGHT_STATUS, LEFT)
+    strafe_right = []
+    strafe_right.extend(lerpLightPattern(STRAFE_RIGHT_STATUS, STRAFE_RIGHT_STATUS, 1.0, rate))
+
+    ############## STRAFE TURNING (GETTING MESY) ############
+    strafe_left_turn_left = []
+    strafe_left_turn_left_on = LightStatus()
+    strafe_left_turn_left_on.copyLights(STRAFE_LEFT_STATUS)
+    strafe_left_turn_left_on = augmentLightStatus(Color("yellow"), strafe_left_turn_left_on, BACK, BOTTOM)
+    strafe_left_turn_left_off = LightStatus()
+    strafe_left_turn_left_off.copyLights(STRAFE_LEFT_STATUS)
+    strafe_left_turn_left_off = augmentLightStatus(Color("black"), strafe_left_turn_left_off, BACK, BOTTOM)
+    strafe_left_turn_left.extend(lerpLightPattern(strafe_left_turn_left_on, strafe_left_turn_left_off, blinker_rate, rate))
+
+    strafe_left_turn_right = []
+    strafe_left_turn_right_on = LightStatus()
+    strafe_left_turn_right_on.copyLights(STRAFE_LEFT_STATUS)
+    strafe_left_turn_right_on = augmentLightStatus(Color("yellow"), strafe_left_turn_right_on, FRONT, BOTTOM)
+    strafe_left_turn_right_off = LightStatus()
+    strafe_left_turn_right_off.copyLights(STRAFE_LEFT_STATUS)
+    strafe_left_turn_right_off = augmentLightStatus(Color("black"), strafe_left_turn_right_off, FRONT, BOTTOM)
+    strafe_left_turn_right.extend(lerpLightPattern(strafe_left_turn_right_on, strafe_left_turn_right_off, blinker_rate, rate))
+
+    strafe_right_turn_left = []
+    strafe_right_turn_left_on = LightStatus()
+    strafe_right_turn_left_on.copyLights(STRAFE_RIGHT_STATUS)
+    strafe_right_turn_left_on = augmentLightStatus(Color("yellow"), strafe_right_turn_left_on, FRONT, BOTTOM)
+    strafe_right_turn_left_off = LightStatus()
+    strafe_right_turn_left_off.copyLights(STRAFE_RIGHT_STATUS)
+    strafe_right_turn_left_off = augmentLightStatus(Color("black"), strafe_right_turn_left_off, FRONT, BOTTOM)
+    strafe_right_turn_left.extend(lerpLightPattern(strafe_right_turn_left_on, strafe_right_turn_left_off, blinker_rate, rate))
+
+    strafe_right_turn_right = []
+    strafe_right_turn_right_on = LightStatus()
+    strafe_right_turn_right_on.copyLights(STRAFE_RIGHT_STATUS)
+    strafe_right_turn_right_on = augmentLightStatus(Color("yellow"), strafe_right_turn_right_on, BACK, BOTTOM)
+    strafe_right_turn_right_off = LightStatus()
+    strafe_right_turn_right_off.copyLights(STRAFE_RIGHT_STATUS)
+    strafe_right_turn_right_off = augmentLightStatus(Color("black"), strafe_right_turn_right_off, BACK, BOTTOM)
+    strafe_right_turn_right.extend(lerpLightPattern(strafe_right_turn_right_on, strafe_right_turn_right_off, blinker_rate, rate))
+    ############# ASSIGNMENTS INTO DICTIONARY
     patterns["TURNING_LEFT"] = turning_left
     patterns["TURNING_RIGHT"] = turning_right
+
+    patterns["DRIVING"] = driving
+    patterns["REVERSING"] = driving
+    patterns["DRIVING_TURNING_LEFT"] = turning_left
+    patterns["DRIVING_TURNING_RIGHT"] = turning_right
+    patterns["REVERSING_TURNING_LEFT"] = turning_right
+    patterns["REVERSING_TURNING_RIGHT"] = turning_left
+
+    patterns["STRAFE_LEFT"] = strafe_left
+    patterns["STRAFE_RIGHT"] = strafe_right
+    patterns["STRAFE_LEFT_TURNING_LEFT"] = strafe_left_turn_left
+    patterns["STRAFE_LEFT_TURNING_RIGHT"] = strafe_left_turn_right
+    patterns["STRAFE_RIGHT_TURNING_LEFT"] = strafe_right_turn_left
+    patterns["STRAFE_RIGHT_TURNING_RIGHT"] = strafe_right_turn_right
+
+    patterns["IDLE"] = driving
     patterns["IDLE_LONG"] = rainbow
 
     print str(len(patterns)) + " CREATED"
