@@ -6,23 +6,25 @@ from geometry_msgs.msg import *
 
 STATE = ""
 
-min_translation = 0.1
-min_rotation = 0.05
-do_strafe = True
-long_idle_time = 10.0
-
 def WATCH_MOVEMENT():
-    global pub
+    global pub, min_translation, min_rotation, do_strafe, long_idle_time
     node = rospy.init_node('movement_monitor')
 
-    rospy.Subscriber("cmd_vel", Twist, callback)
-    pub = rospy.Publisher("movement_state", String, queue_size=5)
+    min_translation = rospy.get_param('~min_translation', 0.1)
+    min_rotation = rospy.get_param('~min_rotation', 0.05)
+    do_strafe = rospy.get_param('~do_strafe', True)
+    long_idle_time = rospy.get_param('~long_idle_time', 10.0)
+    cmd_vel_topic = rospy.get_param('~cmd_vel_topic', "/cmd_vel")
 
+    rospy.Subscriber(cmd_vel_topic, Twist, callback)
+    pub = rospy.Publisher("movement_state", String, queue_size=5, latch=True)
+
+    pub.publish(String("IDLE"))
     rospy.spin()
 
 def callback(msg):
-    global STATE, min_translation, min_rotation, do_strafe, long_idle_time
-
+    global STATE, min_translation, min_rotation, do_strafe, long_idle_time, lastSetTime
+    lastSetTime = rospy.get_time()
     newState = ""
 
     if abs(msg.linear.x) > min_translation or abs(msg.linear.y) > min_translation:  #Translation happening
@@ -48,11 +50,12 @@ def callback(msg):
 
     if newState == "":
         newState = "IDLE"
+        if rospy.get_time() - lastSetTime >= long_idle_time:
+            newState = "IDLE_LONG"
 
     if newState != STATE:
         lastSetTime = rospy.get_time()
         pub.publish(String(newState))
-        print newState
         STATE = newState
 
 if __name__ == "__main__":

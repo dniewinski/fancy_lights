@@ -1,0 +1,23 @@
+<launch>
+  <arg name="platform" default="RIDGEBACK" />
+  <arg name="update_rate" default="30" />
+
+  <arg name="min_translation" default="0.1" />
+  <arg name="min_rotation" default="0.05" />
+  <arg name="do_strafe" default="true" />
+  <arg name="long_idle_time" default="10.0" />
+  <arg name="cmd_vel_topic" default="/cmd_vel" />
+
+  <node name="light_controller" pkg="platform_indicator_lights" type="light_controller.py">
+    <param name="platform" value="$(arg platform)" type="str"/>
+    <param name="update_rate" value="$(arg update_rate)" type="int"/>
+  </node>
+
+  <node name="movement_monitor" pkg="platform_indicator_lights" type="movement_monitor.py">
+    <param name="min_translation" value="$(arg min_translation)" type="double"/>
+    <param name="min_rotation" value="$(arg min_rotation)" type="double"/>
+    <param name="do_strafe" value="$(arg do_strafe)" type="bool"/>
+    <param name="long_idle_time" value="$(arg long_idle_time)" type="double"/>
+    <param name="cmd_vel_topic" value="$(arg cmd_vel_topic)" type="str"/>
+  </node>
+</launch>

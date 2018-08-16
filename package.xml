@@ -1,19 +1,14 @@
 <?xml version="1.0"?>
 <package>
-  <name>fancy_lights</name>
+  <name>platform_indicator_lights</name>
   <version>0.0.0</version>
-  <description>The fancy_lights package</description>
+  <description>The platform_indicator_lights package</description>
 
-  <maintainer email="dniewinski@clearpathrobotics.com">dniewinski</maintainer>
+  <maintainer email="dniewinski@clearpathrobotics.com">Dave Niewinski</maintainer>
 
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>rospy</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>ridgeback_msgs</build_depend>
-  <build_depend>warthog_msgs</build_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>

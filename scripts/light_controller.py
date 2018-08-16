@@ -11,12 +11,11 @@ STATE = "IDLE"
 
 def RAINBOWS():
     global STATE
-    rate = 30
 
-    node = rospy.init_node('fancy_light_controller')
+    node = rospy.init_node('platform_indicator_light_controller')
+    rate = rospy.get_param('~update_rate', 30)
+    robot = rospy.get_param('~platform', "ridgeback")
     r_os = rospy.Rate(rate)
-
-    robot = "ridgeback"
 
     msg = None
     lightMapping = None
@@ -30,6 +29,11 @@ def RAINBOWS():
         msg = warthog_msgs.msg.Lights
         lightMapping = [1, 0, 3, 2, 5, 4, 7, 6]
         pub = rospy.Publisher('cmd_lights', warthog_msgs.msg.Lights, queue_size=10)
+    if robot.upper() == "MOOSE":
+        print "Moose configuration used"
+        msg = warthog_msgs.msg.Lights
+        lightMapping = [2, 2, 1, 1, 0, 0, 3, 3]
+        pub = rospy.Publisher('/mcu/cmd_lights', warthog_msgs.msg.Lights, queue_size=10)
 
     if lightMapping and msg:
         patterns = lightPatterns.getPatterns(rate, lightMapping)
@@ -61,9 +65,12 @@ def updateLights(lStatus, pub, msg):
     data = msg()
 
     for i in range(len(lStatus.lights)):
-        data.lights[i].red = min(max(lStatus.lights[i].red, 0.0), 1.0)
-        data.lights[i].green = min(max(lStatus.lights[i].green, 0.0), 1.0)
-        data.lights[i].blue = min(max(lStatus.lights[i].blue, 0.0), 1.0)
+        try:
+            data.lights[i].red = min(max(lStatus.lights[i].red, 0.0), 1.0)
+            data.lights[i].green = min(max(lStatus.lights[i].green, 0.0), 1.0)
+            data.lights[i].blue = min(max(lStatus.lights[i].blue, 0.0), 1.0)
+        except:
+            pass
 
     pub.publish(data)
 
